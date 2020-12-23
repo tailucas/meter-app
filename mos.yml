@@ -26,6 +26,7 @@ config_schema:
   - ["mqtt.server", "192.168.0.5"]
   - ["mqtt.enable", true]
   - ["rpc.mqtt.enable", false]  # Disable remote control over MQTT
+  - ["app.mqtt_topic", "s", "meter/electricity", {title: "MQTT topic for updates"}]
 
 # These settings get compiled into the C structure, and can be accessed
 # from the C code this way:

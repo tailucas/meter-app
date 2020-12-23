@@ -10,7 +10,7 @@ let debug = false;
 let interrupt_mode = true;
 let incrementing_meter = false;
 
-let mqtt_topic = 'meter/electricity/'+Cfg.get('device.id');
+let mqtt_topic = Cfg.get('app.mqtt_topic');
 
 let now = Timer.now();
 let last_minute_metered = 0;
