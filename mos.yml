@@ -27,6 +27,9 @@ config_schema:
   - ["mqtt.enable", true]
   - ["rpc.mqtt.enable", false]  # Disable remote control over MQTT
   - ["app.mqtt_topic", "s", "meter/electricity", {title: "MQTT topic for updates"}]
+  - ["app.debug_mode", "b", false, {title: "Debug mode with additional console output"}]
+  - ["app.incrementing_meter", "b", false, {title: "Increment pulse counts instead of decrement based on MQTT put"}]
+  - ["app.interrupt_mode", "b", true, {title: "Use GPIO interrupts intead of polled sampling"}]
 
 # These settings get compiled into the C structure, and can be accessed
 # from the C code this way:

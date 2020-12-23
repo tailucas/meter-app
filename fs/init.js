@@ -5,9 +5,9 @@ load('api_mqtt.js');
 load('api_sys.js');
 load('api_timer.js');
 
-let debug = false;
-let interrupt_mode = true;
-let incrementing_meter = false;
+let debug = Cfg.get('app.debug_mode');
+let interrupt_mode = Cfg.get('app.interrupt_mode');
+let incrementing_meter = Cfg.get('app.incrementing_meter');
 
 let mqtt_topic = Cfg.get('app.mqtt_topic');
 
