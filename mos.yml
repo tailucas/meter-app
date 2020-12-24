@@ -26,10 +26,13 @@ config_schema:
   - ["mqtt.server", "192.168.0.5"]
   - ["mqtt.enable", true]
   - ["rpc.mqtt.enable", false]  # Disable remote control over MQTT
-  - ["app.mqtt_topic", "s", "meter/electricity", {title: "MQTT topic for updates"}]
-  - ["app.debug_mode", "b", false, {title: "Debug mode with additional console output"}]
+  - ["app.mqtt_pub_topic", "s", "meter/electricity", {title: "MQTT topic for updates"}]
+  - ["app.mqtt_sub_topic", "s", "meter/electricity/control/#", {title: "MQTT topic for updates"}]
+  - ["app.debug", "b", true, {title: "Debug mode with additional console output"}]
   - ["app.incrementing_meter", "b", false, {title: "Increment pulse counts instead of decrement based on MQTT put"}]
   - ["app.interrupt_mode", "b", true, {title: "Use GPIO interrupts intead of polled sampling"}]
+  - ["app.input_pin.digital", "i", 35, {title: "Digital input pin"}]
+  - ["app.input_pin.analog", "i", 34, {title: "Analog input pin"}]
 
 # These settings get compiled into the C structure, and can be accessed
 # from the C code this way:
@@ -58,6 +61,7 @@ libs:
   - origin: https://github.com/mongoose-os-libs/rpc-service-config
   - origin: https://github.com/mongoose-os-libs/rpc-service-fs
   - origin: https://github.com/mongoose-os-libs/rpc-uart
+  - origin: https://github.com/mongoose-os-libs/rpc-service-ota
   - origin: https://github.com/mongoose-os-libs/ota-http-server
   - origin: https://github.com/mongoose-os-libs/dash
 

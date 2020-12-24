@@ -5,11 +5,12 @@ load('api_mqtt.js');
 load('api_sys.js');
 load('api_timer.js');
 
-let debug = Cfg.get('app.debug_mode');
+let debug = Cfg.get('app.debug');
 let interrupt_mode = Cfg.get('app.interrupt_mode');
 let incrementing_meter = Cfg.get('app.incrementing_meter');
 
-let mqtt_topic = Cfg.get('app.mqtt_topic');
+let mqtt_pub_topic = Cfg.get('app.mqtt_pub_topic');
+let mqtt_sub_topic = Cfg.get('app.mqtt_sub_topic');
 
 let now = Timer.now();
 let last_minute_metered = 0;
@@ -27,12 +28,12 @@ let pubMsg = function() {
     last_metered_minute: last_metered_minute,
     register_reading: register_reading
   });
-  let ok = MQTT.pub(mqtt_topic, message, 1);
+  let ok = MQTT.pub(mqtt_pub_topic, message, 1);
   if (debug) {
     if (!ok) {
-      print('ERROR', mqtt_topic, '<-', message);
+      print('ERROR', mqtt_pub_topic, '<-', message);
     } else {
-      print(mqtt_topic, '<-', message);
+      print(mqtt_pub_topic, '<-', message);
     }
   }
 };
@@ -41,6 +42,9 @@ let meterAccounting = function(analog_timer) {
   now = Timer.now();
   // accounting
   if (!analog_timer || now - last_posted >= 60) {
+    if (debug) {
+      print('Performing accounting', now, 'since', last_posted, '; count:', pulse_count);
+    }
     // update these together
     last_metered_minute = now;
     last_minute_metered = pulse_count;
@@ -63,7 +67,7 @@ let meterAccounting = function(analog_timer) {
   }
 };
 
-MQTT.sub(mqtt_topic + '/#', function(conn, topic, msg) {
+MQTT.sub(mqtt_sub_topic, function(conn, topic, msg) {
   if (debug) {
     print(topic, '->', msg);
   }
@@ -77,6 +81,7 @@ MQTT.sub(mqtt_topic + '/#', function(conn, topic, msg) {
     if (register_reading <= 0) {
       register_reading = -1;
     }
+    pubMsg();
   } else if (typeof obj.adjust_register === "number") {
     if (register_reading <= 0) {
       register_reading = 0;
@@ -88,12 +93,12 @@ MQTT.sub(mqtt_topic + '/#', function(conn, topic, msg) {
     if (debug) {
       print('Adjusted register by', obj.adjust_register, 'to', register_reading);
     }
+    pubMsg();
   }
-  pubMsg();
 }, null);
 
 let digital_value = 1;
-let adc_pin = 34;
+let adc_pin = Cfg.get('app.input_pin.analog');
 let sample_latch = false;
 // 60Ah @ 230V => 13800Wh => max pulse rate is 3.8pps => 261ms or 5 samples per second
 let sample_rate = 200;
@@ -101,16 +106,16 @@ if (debug) {
   sample_rate = 1000;
 }
 if (interrupt_mode) {
-  let digital_pin = 35;
+  let digital_pin = Cfg.get('app.input_pin.digital');
   GPIO.set_mode(digital_pin, GPIO.MODE_INPUT);
-  GPIO.set_pull(digital_pin, GPIO.PULL_UP);
-  GPIO.set_int_handler(digital_pin, GPIO.INT_EDGE_NEG, function(pin) {
+  // use debouncing button handler with 1ms delay
+  GPIO.set_button_handler(digital_pin, GPIO.PULL_UP, GPIO.INT_EDGE_NEG, 1, function(pin) {
     // GPIO pull-up and edge not always honoured
     digital_value = GPIO.read(pin);
     if (digital_value === 0) {
       ++pulse_count;
       if (debug) {
-        print('Pin', pin, 'got interrupt');
+        print('Pin', pin, 'got interrupt; count:', pulse_count);
       }
     }
   }, null);
