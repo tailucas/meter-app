@@ -6,9 +6,12 @@ load('api_sys.js');
 load('api_timer.js');
 
 let debug = Cfg.get('app.debug');
+if (debug) {
+  print('DEBUG MODE ENABLED');
+}
 let interrupt_mode = Cfg.get('app.interrupt_mode');
 let incrementing_meter = Cfg.get('app.incrementing_meter');
-
+let device_id = Cfg.get('device.id');
 let mqtt_pub_topic = Cfg.get('app.mqtt_pub_topic');
 let mqtt_sub_topic = Cfg.get('app.mqtt_sub_topic');
 
@@ -21,8 +24,11 @@ let sample_value = 0;
 let register_reading = -1;
 
 let pubMsg = function() {
+  now = Timer.now();
   let message = JSON.stringify({
     uptime: Sys.uptime(),
+    timestamp: now,
+    device_id: device_id,
     last_sample_value: sample_value,
     last_minute_metered: last_minute_metered,
     last_metered_minute: last_metered_minute,
