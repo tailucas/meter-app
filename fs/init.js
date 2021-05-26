@@ -14,6 +14,8 @@ let incrementing_meter = Cfg.get('app.incrementing_meter');
 let device_id = Cfg.get('device.id');
 let mqtt_pub_topic = Cfg.get('app.mqtt_pub_topic');
 let mqtt_sub_topic = Cfg.get('app.mqtt_sub_topic');
+let input_location = Cfg.get('app.input_location');
+print('Physical device location=', input_location);
 
 let now = Timer.now();
 let last_minute_metered = 0;
@@ -29,6 +31,7 @@ let pubMsg = function() {
     uptime: Sys.uptime(),
     timestamp: now,
     device_id: device_id,
+    input_location: input_location,
     last_sample_value: sample_value,
     last_minute_metered: last_minute_metered,
     last_metered_minute: last_metered_minute,

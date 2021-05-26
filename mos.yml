@@ -31,6 +31,7 @@ config_schema:
   - ["app.debug", "b", false, {title: "Debug mode with additional console output"}]
   - ["app.incrementing_meter", "b", false, {title: "Increment pulse counts instead of decrement based on MQTT put"}]
   - ["app.interrupt_mode", "b", true, {title: "Use GPIO interrupts intead of polled sampling"}]
+  - ["app.input_location", "s", "Kitchen", {title: "Physical device and inputs location"}]
   - ["app.input_pin.digital", "i", 35, {title: "Digital input pin"}]
   - ["app.input_pin.analog", "i", 34, {title: "Analog input pin"}]
 
