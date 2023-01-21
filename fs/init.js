@@ -12,8 +12,10 @@ if (debug) {
 let interrupt_mode = Cfg.get('app.interrupt_mode');
 let incrementing_meter = Cfg.get('app.incrementing_meter');
 let device_id = Cfg.get('device.id');
-let mqtt_pub_topic = Cfg.get('app.mqtt_pub_topic');
-let mqtt_sub_topic = Cfg.get('app.mqtt_sub_topic');
+let mqtt_topic_prefix = Cfg.get('app.mqtt_topic');
+let mqtt_pub_topic = mqtt_topic_prefix+'/'+Cfg.get('app.mqtt_pub_topic');
+let mqtt_sub_topic = mqtt_topic_prefix+'/'+Cfg.get('app.mqtt_sub_topic');
+let mqtt_heartbeat_topic = mqtt_topic_prefix+'/heartbeat/'+device_id;
 let input_location = Cfg.get('app.input_location');
 print('Physical device location=', input_location);
 
@@ -24,6 +26,17 @@ let last_posted = now;
 let pulse_count = 0;
 let sample_value = 0;
 let register_reading = -1;
+
+let sendMsg = function(topic, message) {
+  let ok = MQTT.pub(topic, message, 1);
+  if (debug) {
+    if (!ok) {
+      print('ERROR', topic, '<-', message);
+    } else {
+      print(topic, '<-', message);
+    }
+  }
+};
 
 let pubMsg = function() {
   now = Timer.now();
@@ -37,14 +50,9 @@ let pubMsg = function() {
     last_metered_minute: last_metered_minute,
     register_reading: register_reading
   });
-  let ok = MQTT.pub(mqtt_pub_topic, message, 1);
-  if (debug) {
-    if (!ok) {
-      print('ERROR', mqtt_pub_topic, '<-', message);
-    } else {
-      print(mqtt_pub_topic, '<-', message);
-    }
-  }
+  sendMsg(mqtt_pub_topic, message);
+  // send heartbeat for uptime check
+  sendMsg(mqtt_heartbeat_topic, 'OK');
 };
 
 let meterAccounting = function(analog_timer) {
@@ -109,11 +117,14 @@ MQTT.sub(mqtt_sub_topic, function(conn, topic, msg) {
 let digital_value = 1;
 let adc_pin = Cfg.get('app.input_pin.analog');
 let sample_latch = false;
-// 60Ah @ 230V => 13800Wh => max pulse rate is 3.8pps => 261ms or 5 samples per second
+// 60Ah @ 230V => 13800Wh => max pulse rate is 3.8pps => 261ms or ~6 samples per second
+// 40Ah @ 230V => 9200Wh => max pulse rate is 2.5pps => 391ms or ~5 samples per second
 let sample_rate = 200;
 if (debug) {
   sample_rate = 1000;
 }
+let last_pulse_diff_ms = 0;
+let last_pulse = Timer.now();
 if (interrupt_mode) {
   let digital_pin = Cfg.get('app.input_pin.digital');
   GPIO.set_mode(digital_pin, GPIO.MODE_INPUT);
@@ -122,9 +133,18 @@ if (interrupt_mode) {
     // GPIO pull-up and edge not always honoured
     digital_value = GPIO.read(pin);
     if (digital_value === 0) {
-      ++pulse_count;
       if (debug) {
         print('Pin', pin, 'got interrupt; count:', pulse_count);
+      }
+      last_pulse_diff_ms = (Timer.now()*1000)-(last_pulse*1000);
+      if (last_pulse_diff_ms >= 270) {
+        ++pulse_count;
+        last_pulse = Timer.now();
+      }
+      else {
+        if (debug) {
+          print('Discarding early pulse', last_pulse_diff_ms, 'ms');
+        }
       }
     }
   }, null);
