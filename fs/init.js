@@ -24,6 +24,7 @@ let last_minute_metered = 0;
 let last_metered_minute = now;
 let last_posted = now;
 let pulse_count = 0;
+let pulse_discards = 0;
 let sample_value = 0;
 let register_reading = -1;
 
@@ -48,7 +49,8 @@ let pubMsg = function() {
     last_sample_value: sample_value,
     last_minute_metered: last_minute_metered,
     last_metered_minute: last_metered_minute,
-    register_reading: register_reading
+    register_reading: register_reading,
+    pulse_discards: pulse_discards
   });
   sendMsg(mqtt_pub_topic, message);
   // send heartbeat for uptime check
@@ -145,6 +147,7 @@ if (interrupt_mode) {
         if (debug) {
           print('Discarding early pulse', last_pulse_diff_ms, 'ms');
         }
+        ++pulse_discards;
       }
     }
   }, null);
