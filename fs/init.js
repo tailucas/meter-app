@@ -12,10 +12,9 @@ if (debug) {
 let interrupt_mode = Cfg.get('app.interrupt_mode');
 let incrementing_meter = Cfg.get('app.incrementing_meter');
 let device_id = Cfg.get('device.id');
-let mqtt_topic_prefix = Cfg.get('app.mqtt_topic');
-let mqtt_pub_topic = mqtt_topic_prefix+'/'+Cfg.get('app.mqtt_pub_topic');
-let mqtt_sub_topic = mqtt_topic_prefix+'/'+Cfg.get('app.mqtt_sub_topic');
-let mqtt_heartbeat_topic = mqtt_topic_prefix+'/heartbeat/'+device_id;
+let mqtt_pub_topic = Cfg.get('app.mqtt_pub_topic');
+let mqtt_sub_topic = Cfg.get('app.mqtt_sub_topic');
+let mqtt_heartbeat_topic = 'meter/heartbeat/'+device_id;
 let input_location = Cfg.get('app.input_location');
 print('Physical device location=', input_location);
 
